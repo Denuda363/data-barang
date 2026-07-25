@@ -1,0 +1,6 @@
+{
+  "name": "Stok Opname Manager",
+  "description": "Aplikasi Manajemen Stok Opname dengan Input Fisik, Import Excel, Scan Barcode, dan Riwayat Transaksi Mobile-Friendly.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
