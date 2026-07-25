@@ -251,17 +251,22 @@ export const INITIAL_TRANSACTIONS: OpnameTransaction[] = [
   }
 ];
 
+const INITIALIZED_KEY = 'stok_opname_initialized_v1';
+
 export function getStoredItems(): Item[] {
   try {
+    const initialized = localStorage.getItem(INITIALIZED_KEY);
     const data = localStorage.getItem(ITEMS_STORAGE_KEY);
-    if (!data) {
+    if (!initialized && data === null) {
+      localStorage.setItem(INITIALIZED_KEY, 'true');
       saveStoredItems(INITIAL_ITEMS);
       return INITIAL_ITEMS;
     }
+    if (!data) return [];
     return JSON.parse(data);
   } catch (e) {
     console.error('Failed to load items from localStorage', e);
-    return INITIAL_ITEMS;
+    return [];
   }
 }
 
@@ -275,15 +280,17 @@ export function saveStoredItems(items: Item[]): void {
 
 export function getStoredTransactions(): OpnameTransaction[] {
   try {
+    const initialized = localStorage.getItem(INITIALIZED_KEY);
     const data = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
-    if (!data) {
+    if (!initialized && data === null) {
       saveStoredTransactions(INITIAL_TRANSACTIONS);
       return INITIAL_TRANSACTIONS;
     }
+    if (!data) return [];
     return JSON.parse(data);
   } catch (e) {
     console.error('Failed to load transactions from localStorage', e);
-    return INITIAL_TRANSACTIONS;
+    return [];
   }
 }
 
@@ -330,15 +337,17 @@ export const INITIAL_INCOMING_STOCK: IncomingStockRecord[] = [
 
 export function getStoredIncomingStock(): IncomingStockRecord[] {
   try {
+    const initialized = localStorage.getItem(INITIALIZED_KEY);
     const data = localStorage.getItem(INCOMING_STORAGE_KEY);
-    if (!data) {
+    if (!initialized && data === null) {
       saveStoredIncomingStock(INITIAL_INCOMING_STOCK);
       return INITIAL_INCOMING_STOCK;
     }
+    if (!data) return [];
     return JSON.parse(data);
   } catch (e) {
     console.error('Failed to load incoming stock from localStorage', e);
-    return INITIAL_INCOMING_STOCK;
+    return [];
   }
 }
 
@@ -355,10 +364,23 @@ export function resetToSampleData(): {
   transactions: OpnameTransaction[];
   incomingStock: IncomingStockRecord[];
 } {
+  localStorage.setItem(INITIALIZED_KEY, 'true');
   saveStoredItems(INITIAL_ITEMS);
   saveStoredTransactions(INITIAL_TRANSACTIONS);
   saveStoredIncomingStock(INITIAL_INCOMING_STOCK);
   return { items: INITIAL_ITEMS, transactions: INITIAL_TRANSACTIONS, incomingStock: INITIAL_INCOMING_STOCK };
+}
+
+export function clearAllData(): {
+  items: Item[];
+  transactions: OpnameTransaction[];
+  incomingStock: IncomingStockRecord[];
+} {
+  localStorage.setItem(INITIALIZED_KEY, 'true');
+  saveStoredItems([]);
+  saveStoredTransactions([]);
+  saveStoredIncomingStock([]);
+  return { items: [], transactions: [], incomingStock: [] };
 }
 
 export function formatRupiah(amount: number): string {

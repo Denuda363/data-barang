@@ -7,6 +7,7 @@ import {
   Plus,
   Search,
   Download,
+  FileSpreadsheet,
   Edit,
   Trash2,
   X,
@@ -141,14 +142,23 @@ export const ItemManagement: React.FC<ItemManagementProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={onOpenImport}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-extrabold rounded-xl transition-all"
+              title="Import Data Master Barang dari file Excel / CSV"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              Import Excel
+            </button>
+
             <button
               onClick={() => exportStockWithExpiryToExcel(filteredItems)}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl shadow transition-colors"
               title="Export Format Excel: No, Kode, Nama Barang, Jumlah Stok, Expired"
             >
-              <Download className="w-4 h-4 text-white" />
-              Export Excel (No, Kode, Nama, Stok, Expired)
+              <Download className="w-4 h-4 text-emerald-400" />
+              Export Excel
             </button>
 
             <button
@@ -156,7 +166,7 @@ export const ItemManagement: React.FC<ItemManagementProps> = ({
               className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all"
             >
               <Plus className="w-4 h-4" />
-              Tambah Barang Baru
+              Tambah Barang
             </button>
           </div>
         </div>
@@ -254,8 +264,26 @@ export const ItemManagement: React.FC<ItemManagementProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400">
-                    Tidak ada barang yang cocok dengan kata kunci.
+                  <td colSpan={9} className="p-10 text-center text-slate-500">
+                    <p className="font-semibold text-slate-700 mb-2">
+                      Belum ada data barang atau tidak ada barang yang cocok dengan kata kunci.
+                    </p>
+                    <div className="flex items-center justify-center gap-2 mt-3">
+                      <button
+                        onClick={onOpenImport}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition-all"
+                      >
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Import Excel
+                      </button>
+                      <button
+                        onClick={handleOpenAddModal}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition-all"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Tambah Manual
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )}

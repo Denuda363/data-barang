@@ -4,6 +4,7 @@ import {
   FileSpreadsheet,
   Download,
   RotateCcw,
+  Trash2,
   Sparkles,
   Smartphone,
   ShieldCheck
@@ -131,10 +132,10 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={onResetData}
-              className="p-1.5 bg-slate-800 hover:bg-rose-950/60 border border-slate-700 text-slate-400 hover:text-rose-300 rounded-lg transition-colors"
-              title="Reset Sample Data"
+              className="p-1.5 bg-slate-800 hover:bg-rose-950/80 border border-slate-700 text-slate-400 hover:text-rose-400 hover:border-rose-800 rounded-lg transition-colors cursor-pointer"
+              title="Hapus / Kosongkan Semua Data"
             >
-              <RotateCcw className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 text-rose-400" />
             </button>
           </div>
         </div>

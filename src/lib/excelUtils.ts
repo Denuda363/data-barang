@@ -3,6 +3,57 @@ import { Item, OpnameTransaction } from '../types';
 import { formatRupiah } from './storage';
 
 /**
+ * Helper to convert various Excel/CSV date formats into standard YYYY-MM-DD
+ */
+function formatExcelDate(val: any): string | undefined {
+  if (val === undefined || val === null || val === '') return undefined;
+
+  // JS Date object
+  if (val instanceof Date) {
+    if (!isNaN(val.getTime())) {
+      return val.toISOString().slice(0, 10);
+    }
+  }
+
+  // Excel serial number (e.g. 45650 -> date in 2024-2027 range)
+  if (typeof val === 'number') {
+    if (val > 20000 && val < 90000) {
+      const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().slice(0, 10);
+      }
+    }
+  }
+
+  const str = String(val).trim();
+  if (!str || str.toLowerCase() === 'tidak ada' || str.toLowerCase() === 'null') {
+    return undefined;
+  }
+
+  // Standard YYYY-MM-DD format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // DD/MM/YYYY or DD-MM-YYYY format
+  const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmyMatch) {
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  // Fallback try standard Date parse
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return str;
+}
+
+/**
  * Downloads a pre-formatted Excel template (.xlsx) for importing master items.
  */
 export function downloadItemImportTemplate(): void {
@@ -15,7 +66,8 @@ export function downloadItemImportTemplate(): void {
       'Satuan': 'Botol',
       'Stok Sistem': 100,
       'Harga Per Unit (Rp)': 15000,
-      'Stok Minimal': 20
+      'Stok Minimal': 20,
+      'Tanggal Expired': '2026-12-31'
     },
     {
       'Kode Barang': 'BRG-012',
@@ -25,7 +77,8 @@ export function downloadItemImportTemplate(): void {
       'Satuan': 'Pcs',
       'Stok Sistem': 80,
       'Harga Per Unit (Rp)': 12500,
-      'Stok Minimal': 15
+      'Stok Minimal': 15,
+      'Tanggal Expired': '2026-11-20'
     },
     {
       'Kode Barang': 'BRG-013',
@@ -35,7 +88,8 @@ export function downloadItemImportTemplate(): void {
       'Satuan': 'Pack',
       'Stok Sistem': 150,
       'Harga Per Unit (Rp)': 18500,
-      'Stok Minimal': 25
+      'Stok Minimal': 25,
+      'Tanggal Expired': '2028-05-15'
     }
   ];
 
@@ -50,7 +104,8 @@ export function downloadItemImportTemplate(): void {
     { wch: 12 }, // Satuan
     { wch: 15 }, // Stok Sistem
     { wch: 20 }, // Harga Per Unit
-    { wch: 15 }  // Stok Minimal
+    { wch: 15 }, // Stok Minimal
+    { wch: 18 }  // Tanggal Expired
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -110,9 +165,19 @@ export async function parseExcelItemFile(file: File): Promise<{
           const location = String(getValue(['Lokasi / Rak', 'Lokasi', 'Rak', 'Location'])).trim() || 'Gudang Utama';
           const unit = String(getValue(['Satuan', 'Unit', 'UOM'])).trim() || 'Pcs';
           
-          const rawSystemStock = getValue(['Stok Sistem', 'Stok', 'Stock', 'System Stock', 'Qty']);
+          const rawSystemStock = getValue(['Stok Sistem', 'Stok', 'Stock', 'System Stock', 'Qty', 'Jumlah Stok']);
           const rawUnitPrice = getValue(['Harga Per Unit (Rp)', 'Harga Per Unit', 'Harga', 'Price', 'UnitPrice']);
           const rawMinStock = getValue(['Stok Minimal', 'Min Stock', 'Minimum Stock']);
+          const rawExpiry = getValue([
+            'Tanggal Expired',
+            'Expired Date',
+            'Expired',
+            'Exp Date',
+            'Tgl Expired',
+            'Kadaluarsa',
+            'Tgl Kadaluarsa',
+            'Tanggal Kadaluarsa'
+          ]);
 
           if (!code && !name) {
             // Skip empty rows
@@ -132,6 +197,7 @@ export async function parseExcelItemFile(file: File): Promise<{
           const systemStock = Number(rawSystemStock) || 0;
           const unitPrice = Number(rawUnitPrice) || 0;
           const minStock = rawMinStock !== '' ? Number(rawMinStock) : undefined;
+          const expiryDate = formatExcelDate(rawExpiry);
 
           validItems.push({
             code,
@@ -141,7 +207,8 @@ export async function parseExcelItemFile(file: File): Promise<{
             unit,
             systemStock: Math.max(0, systemStock),
             unitPrice: Math.max(0, unitPrice),
-            minStock
+            minStock,
+            expiryDate
           });
         });
 

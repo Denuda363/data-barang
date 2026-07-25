@@ -7,7 +7,8 @@ import {
   saveStoredTransactions,
   getStoredIncomingStock,
   saveStoredIncomingStock,
-  resetToSampleData
+  resetToSampleData,
+  clearAllData
 } from './lib/storage';
 import { exportTransactionsToExcel } from './lib/excelUtils';
 import { Header } from './components/Header';
@@ -21,6 +22,7 @@ import { ScannerModal } from './components/ScannerModal';
 import { ImportExcelModal } from './components/ImportExcelModal';
 import { EditOpnameModal } from './components/EditOpnameModal';
 import { CancelOpnameModal } from './components/CancelOpnameModal';
+import { ResetDataModal } from './components/ResetDataModal';
 
 export default function App() {
   const [items, setItems] = useState<Item[]>([]);
@@ -31,6 +33,7 @@ export default function App() {
   // Modals state
   const [isScanOpen, setIsScanOpen] = useState<boolean>(false);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [isResetOpen, setIsResetOpen] = useState<boolean>(false);
   const [editingTx, setEditingTx] = useState<OpnameTransaction | null>(null);
   const [cancellingTx, setCancellingTx] = useState<OpnameTransaction | null>(null);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
@@ -263,6 +266,7 @@ export default function App() {
             systemStock: imp.systemStock,
             unitPrice: imp.unitPrice,
             minStock: imp.minStock ?? updatedItems[existingIdx].minStock,
+            expiryDate: imp.expiryDate || updatedItems[existingIdx].expiryDate,
             updatedAt: now,
           };
         }
@@ -299,14 +303,18 @@ export default function App() {
     handleSetItems(updatedList);
   };
 
-  const handleResetData = () => {
-    if (confirm('Apakah Anda yakin ingin mengembalikan seluruh data ke contoh sampel awal? Data lokal saat ini akan digantikan.')) {
-      const res = resetToSampleData();
-      setItems(res.items);
-      setTransactions(res.transactions);
-      setIncomingRecords(res.incomingStock);
-      alert('Data berhasil di-reset ke sampel awal!');
-    }
+  const handleConfirmClearAll = () => {
+    const res = clearAllData();
+    setItems(res.items);
+    setTransactions(res.transactions);
+    setIncomingRecords(res.incomingStock);
+  };
+
+  const handleConfirmResetSample = () => {
+    const res = resetToSampleData();
+    setItems(res.items);
+    setTransactions(res.transactions);
+    setIncomingRecords(res.incomingStock);
   };
 
   return (
@@ -317,7 +325,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenImport={() => setIsImportOpen(true)}
         onExportTransactions={() => exportTransactionsToExcel(transactions)}
-        onResetData={handleResetData}
+        onResetData={() => setIsResetOpen(true)}
         pendingDraftsCount={stats.draftCount}
       />
 
@@ -411,6 +419,13 @@ export default function App() {
         isOpen={!!cancellingTx}
         onClose={() => setCancellingTx(null)}
         onConfirmCancel={handleConfirmCancelTransaction}
+      />
+
+      <ResetDataModal
+        isOpen={isResetOpen}
+        onClose={() => setIsResetOpen(false)}
+        onConfirmClearAll={handleConfirmClearAll}
+        onConfirmResetSample={handleConfirmResetSample}
       />
     </div>
   );

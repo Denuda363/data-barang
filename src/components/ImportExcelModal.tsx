@@ -267,6 +267,7 @@ export const ImportExcelModal: React.FC<ImportExcelModalProps> = ({
                           <th className="p-2 border-b">Kategori</th>
                           <th className="p-2 border-b">Lokasi</th>
                           <th className="p-2 border-b text-right">Stok</th>
+                          <th className="p-2 border-b text-center">Expired</th>
                           <th className="p-2 border-b text-right">Harga (Rp)</th>
                         </tr>
                       </thead>
@@ -283,6 +284,9 @@ export const ImportExcelModal: React.FC<ImportExcelModalProps> = ({
                             <td className="p-2 text-slate-500">{item.location}</td>
                             <td className="p-2 text-right font-semibold">
                               {item.systemStock} {item.unit}
+                            </td>
+                            <td className="p-2 text-center font-mono font-bold text-rose-600 bg-rose-50/50 rounded-md">
+                              {item.expiryDate || 'Belum diatur'}
                             </td>
                             <td className="p-2 text-right">
                               Rp {item.unitPrice.toLocaleString('id-ID')}
