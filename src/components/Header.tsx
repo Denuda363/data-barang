@@ -7,7 +7,8 @@ import {
   Trash2,
   Sparkles,
   Smartphone,
-  ShieldCheck
+  ShieldCheck,
+  Database
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ interface HeaderProps {
   setActiveTab: (tab: string) => void;
   onOpenImport: () => void;
   onExportTransactions: () => void;
+  onOpenBackupRestore: () => void;
   onResetData: () => void;
   pendingDraftsCount: number;
 }
@@ -24,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onOpenImport,
   onExportTransactions,
+  onOpenBackupRestore,
   onResetData,
   pendingDraftsCount,
 }) => {
@@ -128,6 +131,15 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Download className="w-4 h-4 text-emerald-400" />
               <span className="hidden lg:inline">Export Report</span>
+            </button>
+
+            <button
+              onClick={onOpenBackupRestore}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm cursor-pointer"
+              title="Backup dan Restore Database JSON"
+            >
+              <Database className="w-4 h-4 text-indigo-200" />
+              <span className="hidden sm:inline">Backup & Restore</span>
             </button>
 
             <button

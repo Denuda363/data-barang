@@ -23,6 +23,7 @@ import { ImportExcelModal } from './components/ImportExcelModal';
 import { EditOpnameModal } from './components/EditOpnameModal';
 import { CancelOpnameModal } from './components/CancelOpnameModal';
 import { ResetDataModal } from './components/ResetDataModal';
+import { BackupRestoreModal } from './components/BackupRestoreModal';
 
 export default function App() {
   const [items, setItems] = useState<Item[]>([]);
@@ -34,6 +35,7 @@ export default function App() {
   const [isScanOpen, setIsScanOpen] = useState<boolean>(false);
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [isResetOpen, setIsResetOpen] = useState<boolean>(false);
+  const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState<boolean>(false);
   const [editingTx, setEditingTx] = useState<OpnameTransaction | null>(null);
   const [cancellingTx, setCancellingTx] = useState<OpnameTransaction | null>(null);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
@@ -317,6 +319,16 @@ export default function App() {
     setIncomingRecords(res.incomingStock);
   };
 
+  const handleRestoreData = (
+    restoredItems: Item[],
+    restoredTransactions: OpnameTransaction[],
+    restoredIncoming: IncomingStockRecord[]
+  ) => {
+    handleSetItems(restoredItems);
+    handleSetTransactions(restoredTransactions);
+    handleSetIncomingRecords(restoredIncoming);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
       {/* Navigation Header */}
@@ -325,6 +337,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenImport={() => setIsImportOpen(true)}
         onExportTransactions={() => exportTransactionsToExcel(transactions)}
+        onOpenBackupRestore={() => setIsBackupRestoreOpen(true)}
         onResetData={() => setIsResetOpen(true)}
         pendingDraftsCount={stats.draftCount}
       />
@@ -426,6 +439,15 @@ export default function App() {
         onClose={() => setIsResetOpen(false)}
         onConfirmClearAll={handleConfirmClearAll}
         onConfirmResetSample={handleConfirmResetSample}
+      />
+
+      <BackupRestoreModal
+        isOpen={isBackupRestoreOpen}
+        onClose={() => setIsBackupRestoreOpen(false)}
+        items={items}
+        transactions={transactions}
+        incomingRecords={incomingRecords}
+        onRestoreData={handleRestoreData}
       />
     </div>
   );
