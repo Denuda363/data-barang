@@ -84,19 +84,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-300">
       {/* Top Banner & Quick Mobile Entry */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-7 text-white shadow-lg sm:shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 relative z-10">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold">
-              <ClipboardCheck className="w-4 h-4 text-emerald-400" />
-              Sistem Audit Stok Opname Digital
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] sm:text-xs font-semibold">
+              <ClipboardCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              Sistem Audit Stok Digital
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+            <h2 className="text-lg sm:text-2xl font-extrabold tracking-tight text-white">
               Ringkasan Opname & Akurasi Gudang
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-[11px] sm:text-sm text-slate-300 leading-relaxed">
               Pantau selisih stok sistem vs hitungan fisik secara presisi. Mulai hitung fisik atau scan barcode dari perangkat seluler Anda.
             </p>
           </div>

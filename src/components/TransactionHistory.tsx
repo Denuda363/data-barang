@@ -71,26 +71,26 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   });
 
   return (
-    <div className="space-y-5 pb-16 animate-in fade-in duration-300">
+    <div className="space-y-4 animate-in fade-in duration-300">
       {/* Header & Filter Bar */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
               <History className="w-5 h-5 text-indigo-600" />
               Riwayat Transaksi Stok Opname
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
               Daftar pencatatan audit stok fisik. Anda dapat mengubah (edit) atau membatalkan (cancel) transaksi.
             </p>
           </div>
 
           <button
             onClick={() => exportTransactionsToExcel(sortedTxs)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0"
           >
             <Download className="w-4 h-4" />
-            Export Laporan Excel ({sortedTxs.length})
+            Export Laporan ({sortedTxs.length})
           </button>
         </div>
 

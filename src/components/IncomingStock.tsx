@@ -24,6 +24,24 @@ import {
   RotateCcw
 } from 'lucide-react';
 
+const daysArray = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
+const monthsArray = [
+  { val: '01', label: 'Jan' },
+  { val: '02', label: 'Feb' },
+  { val: '03', label: 'Mar' },
+  { val: '04', label: 'Apr' },
+  { val: '05', label: 'Mei' },
+  { val: '06', label: 'Jun' },
+  { val: '07', label: 'Jul' },
+  { val: '08', label: 'Ags' },
+  { val: '09', label: 'Sep' },
+  { val: '10', label: 'Okt' },
+  { val: '11', label: 'Nov' },
+  { val: '12', label: 'Des' },
+];
+const currentYearValue = new Date().getFullYear();
+const yearsArray = Array.from({ length: 15 }, (_, i) => String(currentYearValue + i));
+
 interface IncomingStockProps {
   items: Item[];
   incomingRecords: IncomingStockRecord[];
@@ -60,11 +78,28 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   const [location, setLocation] = useState<string>('Gudang Utama');
   const [unit, setUnit] = useState<string>('Pcs');
   const [currentStock, setCurrentStock] = useState<number>(0);
-  const [quantity, setQuantity] = useState<number>(10);
+  const [quantity, setQuantity] = useState<number>(0);
   const [expiryDate, setExpiryDate] = useState<string>('');
   const [supplier, setSupplier] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [unitPrice, setUnitPrice] = useState<number>(10000);
+
+  const expYear = expiryDate ? expiryDate.split('-')[0] : '';
+  const expMonth = expiryDate ? expiryDate.split('-')[1] : '';
+  const expDay = expiryDate ? expiryDate.split('-')[2] : '';
+
+  const handleExpChange = (type: 'y' | 'm' | 'd', val: string) => {
+    const now = new Date();
+    let newY = expYear || String(now.getFullYear());
+    let newM = expMonth || String(now.getMonth() + 1).padStart(2, '0');
+    let newD = expDay || String(now.getDate()).padStart(2, '0');
+
+    if (type === 'y') newY = val;
+    if (type === 'm') newM = val;
+    if (type === 'd') newD = val;
+
+    setExpiryDate(`${newY}-${newM}-${newD}`);
+  };
 
   // Success Notification Banner
   const [showSuccessToast, setShowSuccessToast] = useState<boolean>(false);
@@ -81,6 +116,23 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   const [editSupplier, setEditSupplier] = useState<string>('');
   const [editNotes, setEditNotes] = useState<string>('');
 
+  const editExpYear = editExpiryDate ? editExpiryDate.split('-')[0] : '';
+  const editExpMonth = editExpiryDate ? editExpiryDate.split('-')[1] : '';
+  const editExpDay = editExpiryDate ? editExpiryDate.split('-')[2] : '';
+
+  const handleEditExpChange = (type: 'y' | 'm' | 'd', val: string) => {
+    const now = new Date();
+    let newY = editExpYear || String(now.getFullYear());
+    let newM = editExpMonth || String(now.getMonth() + 1).padStart(2, '0');
+    let newD = editExpDay || String(now.getDate()).padStart(2, '0');
+
+    if (type === 'y') newY = val;
+    if (type === 'm') newM = val;
+    if (type === 'd') newD = val;
+
+    setEditExpiryDate(`${newY}-${newM}-${newD}`);
+  };
+
   const [cancellingRecord, setCancellingRecord] = useState<IncomingStockRecord | null>(null);
 
   const handleOpenEditModal = (r: IncomingStockRecord) => {
@@ -94,8 +146,8 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRecord) return;
-    if (editQuantity <= 0 || !editExpiryDate) {
-      alert('Jumlah barang harus > 0 dan Tanggal Expired wajib diisi!');
+    if (editQuantity < 0 || !editExpiryDate) {
+      alert('Jumlah barang tidak boleh negatif dan Tanggal Expired wajib diisi!');
       return;
     }
 
@@ -197,22 +249,24 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName.trim() || !itemCode.trim() || quantity <= 0 || !expiryDate) {
-      alert('Mohon lengkapi Nama Barang, Kode, Jumlah Masuk (>0), dan Tanggal Expired!');
+    if (!itemName.trim() || quantity < 0 || !expiryDate) {
+      alert('Mohon lengkapi Nama Barang, Jumlah Masuk (>= 0), dan Tanggal Expired!');
       return;
     }
+
+    const finalItemCode = itemCode.trim() || `BRG-${Date.now().toString().slice(-6)}`;
 
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10);
     const timeStr = now.toTimeString().slice(0, 5);
 
-    const isNewItem = !selectedItemId && !items.some((i) => i.code.toLowerCase() === itemCode.toLowerCase());
+    const isNewItem = !selectedItemId && !items.some((i) => i.code.toLowerCase() === finalItemCode.toLowerCase());
 
     const newRecord: Omit<IncomingStockRecord, 'id' | 'createdAt'> = {
       date: dateStr,
       time: timeStr,
       itemId: selectedItemId || `item-${Date.now()}`,
-      itemCode: itemCode.trim(),
+      itemCode: finalItemCode,
       itemName: itemName.trim(),
       category: category.trim() || 'Umum',
       unit: unit.trim() || 'Pcs',
@@ -224,7 +278,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
 
     const newItemData: Omit<Item, 'id' | 'updatedAt'> | undefined = isNewItem
       ? {
-          code: itemCode.trim(),
+          code: finalItemCode,
           name: itemName.trim(),
           category: category.trim() || 'Umum',
           location: location.trim() || 'Gudang Utama',
@@ -248,7 +302,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
     setSelectedItemId(null);
     setItemName('');
     setItemCode('');
-    setQuantity(10);
+    setQuantity(0);
     setSupplier('');
     setNotes('');
   };
@@ -267,30 +321,30 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg sm:shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-2">
-              <PackagePlus className="w-4 h-4 text-emerald-400" />
-              Modul Penerimaan & Input Barang Masuk
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-xs font-semibold mb-2">
+              <PackagePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              Penerimaan Barang
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+            <h2 className="text-lg sm:text-2xl font-extrabold tracking-tight text-white leading-snug">
               Pencarian Barang Dinamis & Tanggal Kadaluarsa
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-              Cari barang dengan cepat secara dinamis, input jumlah stok masuk, tanggal expired, serta export langsung laporan barang ke file Excel format <span className="font-mono text-emerald-300 font-bold">No, Kode, Nama, Stok, Expired</span>.
+            <p className="text-[11px] sm:text-sm text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
+              Cari barang dengan cepat secara dinamis, input jumlah stok masuk, tanggal expired, serta export langsung laporan barang ke file Excel format <span className="font-mono text-emerald-300 font-bold hidden sm:inline">No, Nama, Stok, Expired</span>.
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => exportStockWithExpiryToExcel(items)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>Export Excel (Format Khusus)</span>
+              <span>Export Excel</span>
             </button>
           </div>
         </div>
@@ -337,7 +391,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
               <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
                 <span>Pencarian Barang Dinamis *</span>
                 <span className="text-[11px] text-indigo-600 font-semibold">
-                  Cari berdasarkan Kode, Nama, Rak, atau Kategori
+                  Cari berdasarkan Nama atau Rak
                 </span>
               </label>
 
@@ -351,7 +405,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                     setIsDropdownOpen(true);
                   }}
                   onFocus={() => setIsDropdownOpen(true)}
-                  placeholder="Ketik nama atau kode barang (contoh: Kopi, BRG-001)..."
+                  placeholder="Ketik nama barang (contoh: Kopi)..."
                   className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                 />
                 {searchQuery && (
@@ -380,16 +434,11 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                       >
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60">
-                              {item.code}
-                            </span>
                             <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-900">
                               {item.name}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-2">
-                            <span>Kategori: {item.category}</span>
-                            <span>•</span>
                             <span>Lokasi: {item.location}</span>
                           </p>
                         </div>
@@ -441,32 +490,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kode Barang / Barcode *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={itemCode}
-                  onChange={(e) => setItemCode(e.target.value)}
-                  placeholder="e.g. BRG-001"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-indigo-700 focus:bg-white focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kategori
-                </label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Satuan
                 </label>
                 <input
@@ -487,10 +510,10 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   required
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setQuantity(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-full px-3.5 py-2.5 bg-white border border-indigo-200 rounded-xl text-sm font-extrabold text-indigo-900 focus:ring-2 focus:ring-indigo-500"
                 />
                 <p className="text-[10px] text-slate-500 mt-1">
@@ -505,13 +528,43 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                   <span>Tanggal Expired / Kadaluarsa *</span>
                   <Calendar className="w-3.5 h-3.5 text-rose-500" />
                 </label>
-                <input
-                  type="date"
-                  required
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-rose-200 text-rose-950 font-bold rounded-xl text-xs focus:ring-2 focus:ring-rose-500"
-                />
+                <div className="flex items-center gap-2">
+                  <select
+                    value={expDay}
+                    onChange={(e) => handleExpChange('d', e.target.value)}
+                    required
+                    className="w-1/4 px-3 py-2.5 bg-white border border-rose-200 text-rose-950 font-bold rounded-xl text-xs focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Tgl</option>
+                    {daysArray.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={expMonth}
+                    onChange={(e) => handleExpChange('m', e.target.value)}
+                    required
+                    className="flex-1 px-3 py-2.5 bg-white border border-rose-200 text-rose-950 font-bold rounded-xl text-xs focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Bulan</option>
+                    {monthsArray.map(m => (
+                      <option key={m.val} value={m.val}>{m.label}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={expYear}
+                    onChange={(e) => handleExpChange('y', e.target.value)}
+                    required
+                    className="w-1/3 px-3 py-2.5 bg-white border border-rose-200 text-rose-950 font-bold rounded-xl text-xs focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Tahun</option>
+                    {yearsArray.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Quick Presets for Expired */}
                 <div className="flex items-center gap-1 mt-1.5">
@@ -548,33 +601,18 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
               </div>
             </div>
 
-            {/* Optional Supplier & Notes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Supplier / Vendor (Opsional)
-                </label>
-                <input
-                  type="text"
-                  value={supplier}
-                  onChange={(e) => setSupplier(e.target.value)}
-                  placeholder="e.g. PT Distribusi Nusantara"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Catatan / No. Surat Jalan (Opsional)
-                </label>
-                <input
-                  type="text"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. SJ-2026/07/001"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                />
-              </div>
+            {/* Notes */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Catatan / No. Surat Jalan (Opsional)
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. SJ-2026/07/001"
+                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
+              />
             </div>
 
             {/* Submit Action Button */}
@@ -608,11 +646,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
-                <span className="text-slate-400">Kode Barang:</span>
-                <span className="font-mono font-bold text-indigo-300">{itemCode || '-'}</span>
-              </div>
-
               <div className="flex justify-between items-center py-1 border-b border-slate-800/80">
                 <span className="text-slate-400">Nama Barang:</span>
                 <span className="font-bold text-white max-w-[150px] truncate text-right">
@@ -658,10 +691,9 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
             </p>
             <div className="bg-slate-900/90 border border-emerald-800/80 p-2.5 rounded-xl font-mono text-[11px] text-emerald-300 font-semibold space-y-1">
               <div>1. no</div>
-              <div>2. kode</div>
-              <div>3. nama barang</div>
-              <div>4. jumlah stok</div>
-              <div>5. expired</div>
+              <div>2. nama barang</div>
+              <div>3. jumlah stok</div>
+              <div>4. expired</div>
             </div>
             <button
               onClick={() => exportStockWithExpiryToExcel(items)}
@@ -740,9 +772,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-600 font-bold uppercase tracking-wider">
                   <th className="p-3 w-12 text-center">No</th>
-                  <th className="p-3">Kode Barang</th>
                   <th className="p-3">Nama Barang</th>
-                  <th className="p-3">Kategori</th>
                   <th className="p-3 text-right">Jumlah Stok</th>
                   <th className="p-3 text-center">Tanggal Expired</th>
                   <th className="p-3 text-center">Status Kadaluarsa</th>
@@ -775,9 +805,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                     return (
                       <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                         <td className="p-3 text-center font-bold text-slate-400">{index + 1}</td>
-                        <td className="p-3 font-mono font-bold text-indigo-600">{item.code}</td>
                         <td className="p-3 font-extrabold text-slate-900">{item.name}</td>
-                        <td className="p-3 text-slate-600">{item.category}</td>
                         <td className="p-3 text-right font-extrabold text-slate-900">
                           {item.systemStock} {item.unit}
                         </td>
@@ -812,10 +840,10 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                 <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-600 font-bold uppercase tracking-wider">
                   <th className="p-3">No TRX</th>
                   <th className="p-3">Tanggal & Waktu</th>
-                  <th className="p-3">Kode & Nama Barang</th>
+                  <th className="p-3">Nama Barang</th>
                   <th className="p-3 text-right">Jumlah Masuk</th>
                   <th className="p-3 text-center">Expired Date</th>
-                  <th className="p-3">Supplier / Keterangan</th>
+                  <th className="p-3">Keterangan</th>
                   <th className="p-3 text-center">Status</th>
                   <th className="p-3 text-center">Aksi</th>
                 </tr>
@@ -838,9 +866,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                           {r.date} <span className="text-slate-400">({r.time})</span>
                         </td>
                         <td className="p-3">
-                          <span className="font-mono font-bold text-slate-800 block">
-                            {r.itemCode}
-                          </span>
                           <span
                             className={`font-extrabold ${
                               isCancelled ? 'line-through text-slate-400' : 'text-slate-900'
@@ -860,8 +885,7 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                           {r.expiryDate}
                         </td>
                         <td className="p-3 text-slate-600">
-                          <div className="font-semibold text-slate-800">{r.supplier || '-'}</div>
-                          <div className="text-[10px] text-slate-400">{r.notes}</div>
+                          <div className="text-xs text-slate-800">{r.notes || '-'}</div>
                         </td>
                         <td className="p-3 text-center">
                           {isCancelled ? (
@@ -937,9 +961,9 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Kode & Nama:</span>
+                  <span className="text-slate-500">Nama Barang:</span>
                   <span className="font-bold text-slate-900">
-                    [{editingRecord.itemCode}] {editingRecord.itemName}
+                    {editingRecord.itemName}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -954,10 +978,10 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   required
                   value={editQuantity}
-                  onChange={(e) => setEditQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={(e) => setEditQuantity(e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-extrabold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500"
                 />
                 <p className="text-[10px] text-amber-700 mt-1">
@@ -969,23 +993,41 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Tanggal Expired / Kadaluarsa *
                 </label>
-                <input
-                  type="date"
-                  required
-                  value={editExpiryDate}
-                  onChange={(e) => setEditExpiryDate(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-rose-300 rounded-xl text-xs font-bold text-rose-900 focus:bg-white focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Supplier / Vendor</label>
-                <input
-                  type="text"
-                  value={editSupplier}
-                  onChange={(e) => setEditSupplier(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                />
+                <div className="flex items-center gap-2">
+                  <select
+                    value={editExpDay}
+                    onChange={(e) => handleEditExpChange('d', e.target.value)}
+                    required
+                    className="w-1/4 px-3 py-2 bg-slate-50 border border-rose-300 rounded-xl text-xs font-bold text-rose-900 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Tgl</option>
+                    {daysArray.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={editExpMonth}
+                    onChange={(e) => handleEditExpChange('m', e.target.value)}
+                    required
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-rose-300 rounded-xl text-xs font-bold text-rose-900 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Bulan</option>
+                    {monthsArray.map(m => (
+                      <option key={m.val} value={m.val}>{m.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={editExpYear}
+                    onChange={(e) => handleEditExpChange('y', e.target.value)}
+                    required
+                    className="w-1/3 px-3 py-2 bg-slate-50 border border-rose-300 rounded-xl text-xs font-bold text-rose-900 focus:bg-white focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="">Tahun</option>
+                    {yearsArray.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>

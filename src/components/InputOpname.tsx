@@ -142,15 +142,15 @@ export const InputOpname: React.FC<InputOpnameProps> = ({
   const currentValueDiff = selectedItem ? currentDiff * selectedItem.unitPrice : 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5 pb-16 animate-in fade-in duration-300">
+    <div className="max-w-3xl mx-auto space-y-4 pb-12 animate-in fade-in duration-300">
       {/* Toast Notification */}
       {isSuccessToast && (
-        <div className="p-4 bg-emerald-600 text-white rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-top duration-300">
+        <div className="p-4 bg-emerald-600 text-white rounded-2xl shadow-lg flex items-center justify-between animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="w-6 h-6 text-emerald-200 shrink-0" />
             <div>
               <p className="text-sm font-bold">Data Opname Berhasil Disimpan!</p>
-              <p className="text-xs text-emerald-100">
+              <p className="text-[11px] sm:text-xs text-emerald-100 mt-0.5">
                 Laporan stok opname telah tercatat dalam riwayat transaksi.
               </p>
             </div>
@@ -159,13 +159,13 @@ export const InputOpname: React.FC<InputOpnameProps> = ({
       )}
 
       {/* Title Header */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900">
+            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               Input Hasil Hitungan Stok Opname
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
               Cari kode/nama barang atau gunakan kamera HP untuk scan barcode fisik
             </p>
           </div>
@@ -173,7 +173,7 @@ export const InputOpname: React.FC<InputOpnameProps> = ({
           <button
             type="button"
             onClick={onOpenScan}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0 cursor-pointer"
           >
             <Camera className="w-4 h-4 text-emerald-300" />
             Scan Barcode HP
