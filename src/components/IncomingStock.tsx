@@ -105,8 +105,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   const [showSuccessToast, setShowSuccessToast] = useState<boolean>(false);
   const [lastSavedSummary, setLastSavedSummary] = useState<string>('');
 
-  // Tab View for lower list
-  const [activeListTab, setActiveListTab] = useState<'catalog' | 'history'>('catalog');
   const [listSearchQuery, setListSearchQuery] = useState<string>('');
 
   // Modals state for Edit and Cancel
@@ -308,11 +306,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
   };
 
   // Filter list for bottom table
-  const filteredCatalogItems = items.filter((i) => {
-    const q = listSearchQuery.toLowerCase();
-    return !q || i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
-  });
-
   const filteredHistoryRecords = incomingRecords.filter((r) => {
     const q = listSearchQuery.toLowerCase();
     return !q || r.itemName.toLowerCase().includes(q) || r.itemCode.toLowerCase().includes(q) || r.supplier?.toLowerCase().includes(q);
@@ -712,37 +705,13 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
           <div>
             <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
               <Boxes className="w-5 h-5 text-indigo-600" />
-              Daftar Stok & Tanggal Expired Barang
+              Riwayat Barang Masuk
             </h3>
             <p className="text-xs text-slate-500">
-              Pantau jumlah stok sistem dan status kadaluarsa untuk seluruh katalog produk.
+              Riwayat transaksi barang masuk.
             </p>
           </div>
-
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-              <button
-                onClick={() => setActiveListTab('catalog')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activeListTab === 'catalog'
-                    ? 'bg-white text-slate-900 shadow-sm font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Katalog Barang ({items.length})
-              </button>
-              <button
-                onClick={() => setActiveListTab('history')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activeListTab === 'history'
-                    ? 'bg-white text-slate-900 shadow-sm font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Riwayat Barang Masuk ({incomingRecords.length})
-              </button>
-            </div>
-
             <button
               onClick={() => exportStockWithExpiryToExcel(items)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow transition-all"
@@ -765,75 +734,6 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
           />
         </div>
 
-        {/* Table 1: Catalog with Expired Column */}
-        {activeListTab === 'catalog' && (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-600 font-bold uppercase tracking-wider">
-                  <th className="p-3 w-12 text-center">No</th>
-                  <th className="p-3">Nama Barang</th>
-                  <th className="p-3 text-right">Jumlah Stok</th>
-                  <th className="p-3 text-center">Tanggal Expired</th>
-                  <th className="p-3 text-center">Status Kadaluarsa</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredCatalogItems.length > 0 ? (
-                  filteredCatalogItems.map((item, index) => {
-                    // Calculate days until expiry
-                    let expiryBadgeClass = 'bg-slate-100 text-slate-700';
-                    let expiryText = 'Normal';
-
-                    if (item.expiryDate) {
-                      const expDate = new Date(item.expiryDate);
-                      const now = new Date();
-                      const diffDays = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
-
-                      if (diffDays <= 0) {
-                        expiryBadgeClass = 'bg-rose-100 text-rose-800 font-extrabold border border-rose-300';
-                        expiryText = 'Kadaluarsa!';
-                      } else if (diffDays <= 60) {
-                        expiryBadgeClass = 'bg-amber-100 text-amber-800 font-bold border border-amber-300';
-                        expiryText = `< ${diffDays} Hari`;
-                      } else {
-                        expiryBadgeClass = 'bg-emerald-100 text-emerald-800 font-medium';
-                        expiryText = 'Aman';
-                      }
-                    }
-
-                    return (
-                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-3 text-center font-bold text-slate-400">{index + 1}</td>
-                        <td className="p-3 font-extrabold text-slate-900">{item.name}</td>
-                        <td className="p-3 text-right font-extrabold text-slate-900">
-                          {item.systemStock} {item.unit}
-                        </td>
-                        <td className="p-3 text-center font-bold font-mono text-slate-800">
-                          {item.expiryDate || 'Tidak Ada'}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] ${expiryBadgeClass}`}>
-                            {expiryText}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-slate-400">
-                      Tidak ada data barang terdaftar.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Table 2: Incoming Records History */}
-        {activeListTab === 'history' && (
           <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
@@ -932,9 +832,8 @@ export const IncomingStock: React.FC<IncomingStockProps> = ({
                 )}
               </tbody>
             </table>
-          </div>
-        )}
       </div>
+          </div>
 
       {/* Edit Modal */}
       {editingRecord && (
