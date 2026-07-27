@@ -24,6 +24,7 @@ import { EditOpnameModal } from './components/EditOpnameModal';
 import { CancelOpnameModal } from './components/CancelOpnameModal';
 import { ResetDataModal } from './components/ResetDataModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
+import { DatabaseTransferModal } from './components/DatabaseTransferModal';
 
 export default function App() {
   const [items, setItems] = useState<Item[]>([]);
@@ -36,6 +37,7 @@ export default function App() {
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
   const [isResetOpen, setIsResetOpen] = useState<boolean>(false);
   const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState<boolean>(false);
+  const [isDatabaseTransferOpen, setIsDatabaseTransferOpen] = useState<boolean>(false);
   const [editingTx, setEditingTx] = useState<OpnameTransaction | null>(null);
   const [cancellingTx, setCancellingTx] = useState<OpnameTransaction | null>(null);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
@@ -338,6 +340,7 @@ export default function App() {
         onOpenImport={() => setIsImportOpen(true)}
         onExportTransactions={() => exportTransactionsToExcel(transactions)}
         onOpenBackupRestore={() => setIsBackupRestoreOpen(true)}
+        onOpenDatabaseTransfer={() => setIsDatabaseTransferOpen(true)}
         onResetData={() => setIsResetOpen(true)}
         pendingDraftsCount={stats.draftCount}
       />
@@ -448,6 +451,17 @@ export default function App() {
         transactions={transactions}
         incomingRecords={incomingRecords}
         onRestoreData={handleRestoreData}
+      />
+
+      <DatabaseTransferModal
+        isOpen={isDatabaseTransferOpen}
+        onClose={() => setIsDatabaseTransferOpen(false)}
+        items={items}
+        transactions={transactions}
+        incomingRecords={incomingRecords}
+        onApplyDatabaseData={(newItems, newTxs, newInc, sourceName) => {
+          handleRestoreData(newItems, newTxs, newInc);
+        }}
       />
     </div>
   );

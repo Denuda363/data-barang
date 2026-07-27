@@ -11,11 +11,15 @@ import {
   Info,
   Database,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check,
+  Smartphone
 } from 'lucide-react';
 import { Item, OpnameTransaction, IncomingStockRecord } from '../types';
 import {
   exportBackupToJson,
+  generateBackupJsonString,
   parseAndValidateBackupJson,
   BackupData,
 } from '../lib/backupUtils';
@@ -48,12 +52,38 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   const [restoreMode, setRestoreMode] = useState<'replace' | 'merge'>('replace');
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [rawJsonText, setRawJsonText] = useState<string>('');
+  const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
   const handleExport = () => {
     exportBackupToJson(items, transactions, incomingRecords);
+  };
+
+  const handleCopyJson = () => {
+    const jsonStr = generateBackupJsonString(items, transactions, incomingRecords);
+    navigator.clipboard.writeText(jsonStr);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  const handleParseRawText = (text: string) => {
+    setRawJsonText(text);
+    setParseError(null);
+    setFileData(null);
+    setIsSuccess(false);
+
+    if (!text.trim()) return;
+
+    const res = parseAndValidateBackupJson(text);
+    if (res.valid && res.data) {
+      setFileData(res.data);
+    } else {
+      setParseError(res.error || 'Gagal membaca teks JSON');
+    }
   };
 
   const handleFileChange = (file: File) => {
@@ -241,19 +271,40 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
             <div className="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 flex items-start gap-3">
               <Info className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
-              <p className="text-xs text-indigo-950 leading-relaxed">
-                File backup `.json` berisi seluruh riwayat transaksi, master stok barang, serta catatan barang masuk. Menyimpan file ini di komputer Anda sangat berguna untuk keamanan data berkala.
-              </p>
+              <div className="text-xs text-indigo-950 space-y-1">
+                <p className="font-bold">Informasi & Tips Pengguna iPhone / iOS:</p>
+                <p className="leading-relaxed">
+                  • Di iPhone (Safari), tombol unduh akan membuka <strong>Menu Share iOS (Simpan ke File / Kirim ke WhatsApp)</strong>.
+                </p>
+                <p className="leading-relaxed">
+                  • Jika Anda membuka aplikasi di dalam iframe/preview browser, gunakan tombol <strong>Salin Teks JSON</strong> untuk menyalin data tanpa batasan download, atau gunakan fitur <strong>Firebase Cloud Sync</strong>.
+                </p>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleExport}
-              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Unduh File Backup (.json)
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleExport}
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-md shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Unduh / Share JSON
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopyJson}
+                className={`w-full py-3 font-extrabold text-xs rounded-2xl border transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  isCopied
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                }`}
+              >
+                {isCopied ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4 text-indigo-600" />}
+                {isCopied ? 'Teks JSON Disalin!' : 'Salin Teks JSON'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -285,39 +336,85 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
               </div>
             ) : (
               <>
-                {/* Upload Box */}
-                <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
-                    isDragging
-                      ? 'border-indigo-500 bg-indigo-50/50 scale-[1.01]'
-                      : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50'
-                  }`}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileChange(e.target.files[0]);
-                      }
+                {/* Restore Source Toggle */}
+                <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputMode('file');
+                      setParseError(null);
+                      setFileData(null);
                     }}
-                  />
-                  <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center mb-2">
-                    <FileJson className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs font-bold text-slate-800">
-                    {selectedFile ? selectedFile.name : 'Pilih atau Tarik File JSON Backup'}
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Format resmi: backup_stok_opname_*.json
-                  </p>
+                    className={`flex-1 py-1.5 rounded-lg transition-all ${
+                      inputMode === 'file' ? 'bg-white text-indigo-700 shadow-sm' : 'hover:text-slate-900'
+                    }`}
+                  >
+                    Upload File JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputMode('text');
+                      setParseError(null);
+                      setFileData(null);
+                    }}
+                    className={`flex-1 py-1.5 rounded-lg transition-all ${
+                      inputMode === 'text' ? 'bg-white text-indigo-700 shadow-sm' : 'hover:text-slate-900'
+                    }`}
+                  >
+                    Tempel Teks JSON
+                  </button>
                 </div>
+
+                {inputMode === 'file' ? (
+                  /* Upload Box */
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                      isDragging
+                        ? 'border-indigo-500 bg-indigo-50/50 scale-[1.01]'
+                        : 'border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileChange(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center mb-2">
+                      <FileJson className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-800">
+                      {selectedFile ? selectedFile.name : 'Pilih atau Tarik File JSON Backup'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Format resmi: backup_stok_opname_*.json
+                    </p>
+                  </div>
+                ) : (
+                  /* Raw Text Area Paste */
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Tempelkan (Paste) Teks JSON Backup Di Sini:
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={rawJsonText}
+                      onChange={(e) => handleParseRawText(e.target.value)}
+                      placeholder='{"app": "Stok Opname Inventory System", "items": [...]}'
+                      className="w-full p-3 font-mono text-[11px] bg-slate-50 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white text-slate-800"
+                    />
+                  </div>
+                )}
 
                 {/* Error Banner */}
                 {parseError && (

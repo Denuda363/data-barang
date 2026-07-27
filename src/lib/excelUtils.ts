@@ -54,6 +54,61 @@ function formatExcelDate(val: any): string | undefined {
 }
 
 /**
+ * Helper to download workbook compatible with desktop, Android, and iOS Safari Web Share
+ */
+export async function saveAndDownloadWorkbook(workbook: XLSX.WorkBook, fileName: string): Promise<void> {
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const file = new File([blob], fileName, {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+
+  if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: fileName,
+        text: 'File Ekspor Excel Stok Opname',
+      });
+      return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
+    }
+  }
+
+  const isIOS =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+  if (isIOS) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    reader.readAsDataURL(blob);
+  } else {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
  * Downloads a pre-formatted Excel template (.xlsx) for importing master items.
  */
 export function downloadItemImportTemplate(): void {
@@ -112,7 +167,7 @@ export function downloadItemImportTemplate(): void {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Master Barang');
 
   // Write file and trigger browser download
-  XLSX.writeFile(workbook, 'Template_Import_Barang_Stok_Opname.xlsx');
+  saveAndDownloadWorkbook(workbook, 'Template_Import_Barang_Stok_Opname.xlsx');
 }
 
 /**
@@ -284,7 +339,7 @@ export function exportTransactionsToExcel(transactions: OpnameTransaction[]): vo
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Stok Opname');
 
   const nowStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `Laporan_Stok_Opname_${nowStr}.xlsx`);
+  saveAndDownloadWorkbook(workbook, `Laporan_Stok_Opname_${nowStr}.xlsx`);
 }
 
 /**
@@ -323,7 +378,7 @@ export function exportItemsToExcel(items: Item[]): void {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Data Barang');
 
   const nowStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `Master_Barang_${nowStr}.xlsx`);
+  saveAndDownloadWorkbook(workbook, `Master_Barang_${nowStr}.xlsx`);
 }
 
 /**
@@ -353,5 +408,5 @@ export function exportStockWithExpiryToExcel(items: Item[]): void {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Barang & Expired');
 
   const nowStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `Data_Barang_Stok_Expired_${nowStr}.xlsx`);
+  saveAndDownloadWorkbook(workbook, `Data_Barang_Stok_Expired_${nowStr}.xlsx`);
 }

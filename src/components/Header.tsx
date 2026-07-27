@@ -8,7 +8,8 @@ import {
   Sparkles,
   Smartphone,
   ShieldCheck,
-  Database
+  Database,
+  ArrowRightLeft
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ interface HeaderProps {
   onOpenImport: () => void;
   onExportTransactions: () => void;
   onOpenBackupRestore: () => void;
+  onOpenDatabaseTransfer: () => void;
   onResetData: () => void;
   pendingDraftsCount: number;
 }
@@ -27,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenImport,
   onExportTransactions,
   onOpenBackupRestore,
+  onOpenDatabaseTransfer,
   onResetData,
   pendingDraftsCount,
 }) => {
@@ -135,11 +138,20 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={onOpenBackupRestore}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors shadow-sm cursor-pointer"
               title="Backup dan Restore Database JSON"
             >
-              <Database className="w-4 h-4 text-indigo-200" />
-              <span className="hidden sm:inline">Backup & Restore</span>
+              <Database className="w-4 h-4 text-indigo-400" />
+              <span className="hidden sm:inline">Backup JSON</span>
+            </button>
+
+            <button
+              onClick={onOpenDatabaseTransfer}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold rounded-lg transition-all shadow-md cursor-pointer"
+              title="Kelola Firebase & Transfer Data Antar Database"
+            >
+              <ArrowRightLeft className="w-4 h-4 text-white" />
+              <span className="hidden sm:inline">Firebase & Transfer DB</span>
             </button>
 
             <button

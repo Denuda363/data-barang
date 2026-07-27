@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "items": {
+      "title": "Master Items",
+      "description": "Katalog data barang dan stok opname",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string font-bold" },
+        "category": { "type": "string" },
+        "unit": { "type": "string" },
+        "systemStock": { "type": "number" },
+        "physicalStock": { "type": "number" },
+        "difference": { "type": "number" },
+        "status": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "code", "name"]
+    },
+    "transactions": {
+      "title": "Stock Opname Transactions",
+      "description": "Riwayat transaksi stok opname",
+      "properties": {
+        "id": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemCode": { "type": "string" },
+        "itemName": { "type": "string" },
+        "unit": { "type": "string" },
+        "systemStock": { "type": "number" },
+        "physicalStock": { "type": "number" },
+        "difference": { "type": "number" },
+        "status": { "type": "string" },
+        "category": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "note": { "type": "string" },
+        "operator": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "location": { "type": "string" }
+      },
+      "required": ["id", "itemId", "itemCode", "itemName"]
+    },
+    "incoming_stock": {
+      "title": "Incoming Stock Records",
+      "description": "Riwayat penerimaan barang masuk",
+      "properties": {
+        "id": { "type": "string" },
+        "itemCode": { "type": "string" },
+        "itemName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unit": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "supplier": { "type": "string" },
+        "notes": { "type": "string font-medium" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "itemCode", "itemName"]
+    },
+    "database_snapshots": {
+      "title": "Database Snapshots & Transfers",
+      "description": "Snapshot database untuk transfer antar database",
+      "properties": {
+        "snapshotId": { "type": "string" },
+        "databaseName": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "items": { "type": "array" },
+        "transactions": { "type": "array" },
+        "incomingStock": { "type": "array" }
+      }
+    }
+  }
+}
